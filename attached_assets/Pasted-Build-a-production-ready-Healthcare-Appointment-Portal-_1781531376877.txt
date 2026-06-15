@@ -1,0 +1,149 @@
+Build a production-ready Healthcare Appointment Portal for a 24-hour hackathon.
+
+Tech Stack:
+- Frontend: React + Vite + Tailwind CSS
+- Backend: Node.js + Express.js
+- Database: MongoDB Atlas with Mongoose
+- Authentication: JWT
+- Deployment ready for Vercel (frontend) and Render (backend)
+
+Project Goal:
+Patients can find doctors, book appointments, view appointment history, and access prescriptions.
+Doctors can manage appointments and issue prescriptions.
+
+User Roles:
+1. Patient
+2. Doctor
+3. Admin (basic dashboard)
+
+Pages Required:
+
+1. Landing Page
+- Modern healthcare design
+- Hero section
+- Features section
+- Statistics section
+- Testimonials
+- Call-to-action buttons
+- Responsive design
+- Professional blue/white healthcare theme
+- Smooth animations
+
+2. Authentication
+- Login page
+- Registration page
+- Role selection (Patient / Doctor)
+- JWT authentication
+- Form validation
+
+3. Patient Dashboard
+- Welcome section
+- Search doctors
+- Filter by specialization
+- Book appointment
+- View upcoming appointments
+- Appointment history
+- View prescriptions
+- Profile management
+
+4. Doctor Dashboard
+- Today's appointments
+- Upcoming appointments
+- Patient details
+- Add prescription
+- Manage availability
+- Dashboard analytics cards
+
+5. Appointment System
+- Doctor listing cards
+- Specialization filters
+- Date picker
+- Time slot selection
+- Appointment confirmation
+- Appointment status tracking
+
+6. Prescription Management
+- Doctor creates prescription
+- Medicine name
+- Dosage
+- Notes
+- Patient can download/view prescriptions
+
+7. Admin Dashboard
+- Total doctors
+- Total patients
+- Total appointments
+- Analytics charts
+
+Database Models:
+User {
+  name,
+  email,
+  password,
+  role,
+  phone
+}
+
+Doctor {
+  userId,
+  specialization,
+  experience,
+  qualification,
+  availability
+}
+
+Appointment {
+  patientId,
+  doctorId,
+  date,
+  time,
+  status
+}
+
+Prescription {
+  patientId,
+  doctorId,
+  medicines,
+  dosage,
+  notes
+}
+
+Bonus Features (Hackathon Winning Features):
+1. AI Symptom Checker
+- User enters symptoms
+- AI suggests possible conditions
+- Disclaimer included
+
+2. Emergency Priority Booking
+- Normal
+- Urgent
+- Critical
+
+3. Email Notifications
+- Appointment confirmation
+- Appointment reminders
+
+4. Health Tips Section
+- Dynamic healthcare tips
+
+UI Requirements:
+- Premium healthcare design
+- Responsive mobile-first design
+- Tailwind CSS
+- Modern cards
+- Dashboard charts
+- Professional icons
+- Smooth transitions
+- Loading states
+- Error handling
+
+Backend Requirements:
+- REST APIs
+- JWT Authentication
+- MongoDB integration
+- Proper folder structure
+- Middleware
+- Validation
+- Error handling
+
+Generate complete frontend and backend structure with clean, maintainable code and deployment instructions.
