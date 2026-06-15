@@ -1,11 +1,12 @@
 {
   "name": "healthcare-frontend",
   "version": "1.0.0",
+  "type": "module",
   "description": "Healthcare Appointment Portal Frontend",
   "scripts": {
     "dev": "vite --host 0.0.0.0 --port 5000",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview --host 0.0.0.0 --port 5000"
   },
   "dependencies": {
     "react": "^18.2.0",
