@@ -1,0 +1,45 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    @apply bg-gray-50 text-gray-900;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2.5 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg active:scale-95;
+  }
+  .btn-secondary {
+    @apply bg-white hover:bg-gray-50 text-blue-600 font-semibold px-6 py-2.5 rounded-xl border-2 border-blue-600 transition-all duration-200 active:scale-95;
+  }
+  .btn-danger {
+    @apply bg-red-500 hover:bg-red-600 text-white font-semibold px-6 py-2.5 rounded-xl transition-all duration-200 active:scale-95;
+  }
+  .card {
+    @apply bg-white rounded-2xl shadow-sm border border-gray-100 p-6;
+  }
+  .input {
+    @apply w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all;
+  }
+  .badge-pending { @apply bg-yellow-100 text-yellow-800 text-xs font-semibold px-2.5 py-0.5 rounded-full; }
+  .badge-confirmed { @apply bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded-full; }
+  .badge-completed { @apply bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded-full; }
+  .badge-cancelled { @apply bg-red-100 text-red-800 text-xs font-semibold px-2.5 py-0.5 rounded-full; }
+  .badge-normal { @apply bg-gray-100 text-gray-800 text-xs font-semibold px-2.5 py-0.5 rounded-full; }
+  .badge-urgent { @apply bg-orange-100 text-orange-800 text-xs font-semibold px-2.5 py-0.5 rounded-full; }
+  .badge-critical { @apply bg-red-100 text-red-800 text-xs font-semibold px-2.5 py-0.5 rounded-full; }
+}
+
+.animate-fade-in { animation: fadeIn 0.4s ease-in-out; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+.gradient-hero {
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #06b6d4 100%);
+}
