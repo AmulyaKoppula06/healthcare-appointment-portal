@@ -1,81 +1,102 @@
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
-const Doctor = require('../models/Doctor');
+const mongoose = require('mongoose');
 const { protect } = require('../middleware/auth');
+const { sendMail, templates } = require('../mailer');
 
-const generateToken = (id) =>
-  jwt.sign({ id }, process.env.JWT_SECRET || 'secret123', { expiresIn: '7d' });
+const SECRET = process.env.JWT_SECRET || 'medicare_secret_2024';
+const generateToken = (id) => jwt.sign({ id }, SECRET, { expiresIn: '7d' });
 
-// Register
+function useDb() { return mongoose.connection.readyState === 1; }
+
+// ─── Register ──────────────────────────────────────────────────────────────
 router.post('/register', async (req, res) => {
   try {
     const { name, email, password, role, phone, specialization, experience, qualification } = req.body;
-    const exists = await User.findOne({ email });
-    if (exists) return res.status(400).json({ message: 'Email already registered' });
+    if (!name || !email || !password) return res.status(400).json({ message: 'Name, email and password are required' });
 
-    const user = await User.create({ name, email, password, role: role || 'patient', phone });
+    let userId, userObj;
 
-    if (role === 'doctor') {
-      await Doctor.create({
-        userId: user._id,
-        specialization: specialization || 'General',
-        experience: experience || 0,
-        qualification: qualification || 'MBBS',
-        availability: [
-          { day: 'Monday', slots: ['09:00', '10:00', '11:00', '14:00', '15:00'] },
-          { day: 'Tuesday', slots: ['09:00', '10:00', '11:00', '14:00', '15:00'] },
-          { day: 'Wednesday', slots: ['09:00', '10:00', '11:00', '14:00', '15:00'] },
-          { day: 'Thursday', slots: ['09:00', '10:00', '11:00', '14:00', '15:00'] },
-          { day: 'Friday', slots: ['09:00', '10:00', '11:00', '14:00', '15:00'] },
-        ]
-      });
+    if (useDb()) {
+      const User = require('../models/User');
+      const Doctor = require('../models/Doctor');
+      const exists = await User.findOne({ email });
+      if (exists) return res.status(400).json({ message: 'Email already registered' });
+      const user = await User.create({ name, email, password, role: role || 'patient', phone });
+      userId = user._id.toString();
+      userObj = { _id: userId, name: user.name, email: user.email, role: user.role };
+      if (role === 'doctor') {
+        await Doctor.create({ userId: user._id, specialization: specialization || 'General', experience: experience || 0, qualification: qualification || 'MBBS' });
+      }
+    } else {
+      const store = require('../memstore');
+      if (store.findUserByEmail(email)) return res.status(400).json({ message: 'Email already registered' });
+      const user = store.createUser({ name, email, password, role: role || 'patient', phone });
+      userId = user._id;
+      userObj = { _id: userId, name: user.name, email: user.email, role: user.role };
+      if (role === 'doctor') {
+        store.createDoctor({ userId, specialization: specialization || 'General', experience: experience || 0, qualification: qualification || 'MBBS', consultationFee: 500 });
+      }
     }
 
-    res.status(201).json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      token: generateToken(user._id)
-    });
+    // Send welcome email
+    const tmpl = templates.welcome(name, email, userObj.role);
+    sendMail({ to: email, ...tmpl });
+
+    res.status(201).json({ ...userObj, token: generateToken(userId) });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: err.message });
   }
 });
 
-// Login
+// ─── Login ─────────────────────────────────────────────────────────────────
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
-    const user = await User.findOne({ email });
-    if (!user || !(await user.matchPassword(password))) {
-      return res.status(401).json({ message: 'Invalid email or password' });
+    if (!email || !password) return res.status(400).json({ message: 'Email and password are required' });
+
+    let userObj;
+
+    if (useDb()) {
+      const User = require('../models/User');
+      const user = await User.findOne({ email });
+      if (!user || !(await user.matchPassword(password))) return res.status(401).json({ message: 'Invalid email or password' });
+      userObj = { _id: user._id.toString(), name: user.name, email: user.email, role: user.role };
+    } else {
+      const store = require('../memstore');
+      const user = store.findUserByEmail(email);
+      if (!user || !store.checkPassword(user, password)) return res.status(401).json({ message: 'Invalid email or password' });
+      userObj = { _id: user._id, name: user.name, email: user.email, role: user.role };
     }
-    res.json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      token: generateToken(user._id)
-    });
+
+    // Send login alert email
+    const tmpl = templates.loginAlert(userObj.name, userObj.email);
+    sendMail({ to: userObj.email, ...tmpl });
+
+    res.json({ ...userObj, token: generateToken(userObj._id) });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
 
-// Get profile
-router.get('/me', protect, async (req, res) => {
-  res.json(req.user);
-});
+// ─── Get profile ───────────────────────────────────────────────────────────
+router.get('/me', protect, (req, res) => res.json(req.user));
 
-// Update profile
+// ─── Update profile ────────────────────────────────────────────────────────
 router.put('/me', protect, async (req, res) => {
   try {
     const { name, phone } = req.body;
-    const user = await User.findByIdAndUpdate(req.user._id, { name, phone }, { new: true }).select('-password');
-    res.json(user);
+    if (useDb()) {
+      const User = require('../models/User');
+      const user = await User.findByIdAndUpdate(req.user._id, { name, phone }, { new: true }).select('-password');
+      res.json(user);
+    } else {
+      const store = require('../memstore');
+      const user = store.updateUser(req.user._id, { name, phone });
+      res.json(user);
+    }
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
