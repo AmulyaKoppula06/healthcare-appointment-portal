@@ -1,15 +1,29 @@
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+const mongoose = require('mongoose');
+
+const SECRET = process.env.JWT_SECRET || 'medicare_secret_2024';
 
 const protect = async (req, res, next) => {
   let token;
-  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+  if (req.headers.authorization?.startsWith('Bearer')) {
     token = req.headers.authorization.split(' ')[1];
   }
   if (!token) return res.status(401).json({ message: 'Not authorized, no token' });
+
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret123');
-    req.user = await User.findById(decoded.id).select('-password');
+    const decoded = jwt.verify(token, SECRET);
+
+    if (mongoose.connection.readyState === 1) {
+      const User = require('../models/User');
+      req.user = await User.findById(decoded.id).select('-password');
+    } else {
+      const store = require('../memstore');
+      const u = store.findUserById(decoded.id);
+      if (!u) return res.status(401).json({ message: 'User not found' });
+      const { password, ...user } = u;
+      req.user = user;
+    }
+
     next();
   } catch (err) {
     res.status(401).json({ message: 'Not authorized, token failed' });
